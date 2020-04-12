@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>CSS Template</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Style the side navigation */
+.sidenav {
+  height: 100%;
+  width: 200px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+}
+
+
+/* Side navigation links */
+.sidenav a {
+  color: white;
+  padding: 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* Change color on hover */
+.sidenav a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+/* Style the content */
+.content {
+  margin-left: 200px;
+  padding-left: 20px;
+}
+</style>
+
+<script src='renderer.js'></script>
+</head>
+<body>
+
+<div class="sidenav">
+  <a href="#">RedisList</a>
+  <a href="#">Check</a>
+  <a href="#">Help</a>
+</div>
+
+<div class="content">
+  <h2>RedisMon</h2>
+  <p>Redis Monitoring Tool to run anywhere</p>
+  <form action="#" id="redisAddressForm">
+    <div class="form-group">
+        <label for="redisAddressForm">Redis Address</label>
+        <input type="text" class="form-control" id="redisAddressText" placeholder="ip">
+    </div>
+    <button id="submit" type="submit" class="btn btn-primary" from="redisAddressForm">Register</button>
+</form>
+<p id="response">Redis Address</p>
+</div>
+
+</body>
+</html>
