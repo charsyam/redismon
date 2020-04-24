@@ -14,7 +14,9 @@ def get_set_key_size(conn, key):
     return len(conn.smembers(key))
 
 def dump(conn, key):
-    return len(conn.dump(key))
+    data = conn.dump(key)
+    l = len(data) if data else 0
+    return l
 
 rconn = redis.StrictRedis(REDIS_HOST, REDIS_PORT)
 
