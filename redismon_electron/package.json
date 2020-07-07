@@ -22,7 +22,7 @@
   "author": "charsyam",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^8.0.2",
+    "electron": "^8.2.4",
     "electron-builder": "^22.3.2"
   },
   "dependencies": {
