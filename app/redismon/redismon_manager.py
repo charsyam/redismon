@@ -1,9 +1,8 @@
 from redismon.model import MonitoringGroup
 
 class RedisMonManager:
-    def __init__(self, db, redis_conn):
+    def __init__(self, db):
         self.db = db
-        self.redis_conn = redis_conn
 
     def create_monitoring_group(self, name, seed):
         group = MonitoringGroup(name, seed)        
