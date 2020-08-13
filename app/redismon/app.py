@@ -3,7 +3,7 @@
 from flask import Flask, jsonify
 from flask import request
 
-from redismon.base import app, db, redis_conn, config
+from redismon.base import app, db, config
 from redismon.redismon_manager import RedisMonManager
 
 import redis
@@ -12,8 +12,10 @@ import time
 
 SEED = 1592352000
 
-manager = RedisMonManager(db, redis_conn)
+manager = RedisMonManager(db)
 
+redis_config = config.get("redis")
+rconn = redis.StrictRedis(host=redis_config.get("host"), port=int(redis_config.get("port")))
 
 def response_object(code, message, data=None):
     resp = {"code": code, "message": message}
