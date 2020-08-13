@@ -34,4 +34,5 @@ jobs:
     - name: Run Test
       run: |
         pip install nose
-        cd $GITHUB_WORKSPACE/app && nosetests -v tests
+        cd app
+        nosetests -v tests
