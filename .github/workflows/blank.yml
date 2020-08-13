@@ -34,5 +34,4 @@ jobs:
     - name: Run Test
       run: |
         pip install nose
-        cd app
-        ~/.local/bin/nosetests -v tests
+        cd app && ~/.local/bin/nosetests -v tests
