@@ -1,6 +1,8 @@
 from redismon.base import db
 from sqlalchemy.orm.attributes import QueryableAttribute
 
+import json
+
 
 class BaseModel(db.Model):
     __abstract__ = True
@@ -104,7 +106,7 @@ class BaseModel(db.Model):
                     ret_data[key] = val.to_dict(
                         show=list(show),
                         _hide=list(_hide), 
-                        _path=('%s.%s' % (path, key.lower())),
+                        _path=('%s.%s' % (_path, key.lower())),
                     )
                 else:
                     try:
