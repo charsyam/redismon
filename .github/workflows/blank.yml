@@ -29,4 +29,4 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Run Test
       run: |
-        cd app && noses -v tests
+        cd app && nosetests -v tests
