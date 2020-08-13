@@ -2,3 +2,4 @@ flask
 redis
 pymysql
 nose
+flake8
