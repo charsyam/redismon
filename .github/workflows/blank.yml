@@ -38,7 +38,7 @@ jobs:
     - name: Run Test
       run: |
         pip install nose flake8
-        cd app && ~/.local/bin/nosetests -v tests
+        cd app && nosetests -v tests
 
     - name: Lint with flake8
       run: |
