@@ -25,6 +25,10 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
 
     # Runs a single command using the runners shell
     - name: Install Python Library
@@ -33,5 +37,11 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Run Test
       run: |
-        pip install nose
+        pip install nose flake8
         cd app && ~/.local/bin/nosetests -v tests
+
+    - name: Lint with flake8
+      run: |
+        flake8 app --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 app --count --exit-zero --max-complexity=10 --max-lien-length=127 --statistics
+
