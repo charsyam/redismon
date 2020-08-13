@@ -35,13 +35,14 @@ jobs:
       run: pip install -r ./requirements.txt
 
     # Runs a set of commands using the runners shell
+    - name: Lint with flake8
+      run: |
+        flake8 app --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 app --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
     - name: Run Test
       run: |
         pip install nose flake8
         cd app && nosetests -v tests
 
-    - name: Lint with flake8
-      run: |
-        flake8 app --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 app --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
