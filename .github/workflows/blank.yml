@@ -35,4 +35,4 @@ jobs:
       run: |
         pip install nose
         cd app
-        nosetests -v tests
+        ~/.local/bin/nosetests -v tests
