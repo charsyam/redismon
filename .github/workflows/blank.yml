@@ -42,7 +42,6 @@ jobs:
 
     - name: Run Test
       run: |
-        pip install nose flake8
         cd app && nosetests -v tests
 
 

@@ -3,3 +3,6 @@ redis
 pymysql
 nose
 flake8
+flask-migrate
+flask_sqlalchemy
+pylint

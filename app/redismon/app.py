@@ -3,18 +3,29 @@
 from flask import Flask, jsonify
 from flask import request
 
-from redismon.config import Config
+from redismon.base import app, db, redis_conn, config
+from redismon.redismon_manager import RedisMonManager
 
 import redis
 import time
 
 
-app = Flask(__name__)
-rconn = redis.StrictRedis()
-
 SEED = 1592352000
 
-config = Config("../redismon.ini")
+manager = RedisMonManager(db, redis_conn)
+
+
+def response_object(code, message, data=None):
+    resp = {"code": code, "message": message}
+    if data != None:
+        resp.update(data)
+    return resp
+
+
+def response_objects(code, message, data):
+    data_json = list(map(lambda x: x.to_dict(), data))
+    resp = {"code": code, "message": message, "data": data_json}
+    return resp
 
 def timestamp2str(ts):
     local_time = time.localtime(int(ts))
@@ -46,6 +57,27 @@ def getChartData(host):
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
+
+@app.route('/api/v1/groups', methods=['POST'])
+def create_groups():
+    param = request.get_json()
+    name = param["name"]
+    seed = param["seed"]
+    group = manager.create_monitoring_group(name, seed)
+    return response_object(0, "Ok", group.to_dict())
+
+
+@app.route('/api/v1/groups', methods=['GET'])
+def list_groups():
+    groups = manager.list_monitoring_groups()
+    return response_objects(0, "Ok", groups)
+
+
+@app.route('/api/v1/groups/<group_id>', methods=['DELETE'])
+def delete_groups(group_id):
+    groups = manager.delete_monitoring_group(group_id)
+    return response_object(0, "Ok")
+     
 
 if __name__ == '__main__':
     app_config = config.get("app")
