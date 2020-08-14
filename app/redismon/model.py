@@ -135,3 +135,50 @@ class MonitoringGroup(BaseModel):
 
     def __repr__(self):
         return f"<MonitoringGroup('{self.id}', '{self.name}', '{self.seed}')>"
+
+
+class Unit(BaseModel):
+    __tablename__ = "unit"
+    __table_args__ = {'mysql_collate': 'utf8_general_ci'}
+    id = db.Column(db.Integer, primary_key=True)
+    addr = db.Column(db.String(256))
+    group_id = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime)
+
+    _default_fields = [
+        "addr",
+        "group_id",
+        "created_at"
+    ]
+
+    def __init__(self, addr, group_id, created_at):
+        self.addr = addr
+        self.group_id= group_id
+        self.created_at = created_at
+
+    def __repr__(self):
+        return f"<Unit('{self.id}', '{self.addr}', '{self.group_id}', '{self.created_at}')>"
+
+
+class Metric(BaseModel):
+    __tablename__ = "metric"
+    __table_args__ = {'mysql_collate': 'utf8_general_ci'}
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer)
+    value = db.Column(db.Text)
+    created_at = db.Column(db.DateTime)
+
+    _default_fields = [
+        "unit_id",
+        "value",
+        "created_at"
+    ]
+
+    def __init__(self, unit_id, value, created_at):
+        self.unit_id = unit_id
+        self.value = value
+        self.created_at = created_at
+
+    def __repr__(self):
+        return f"<Metric('{self.id}', '{self.unit_id}', '{self.value}', '{self.created_at}')>"
+
