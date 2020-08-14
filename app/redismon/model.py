@@ -123,18 +123,21 @@ class MonitoringGroup(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256))
     seed = db.Column(db.String(256))
+    created_at = db.Column(db.DateTime)
 
     _default_fields = [
         "name",
         "seed",
+        "created_at"
     ]
 
-    def __init__(self, name, seed):
+    def __init__(self, name, seed, created_at):
         self.name = name
         self.seed = seed
+        self.created_at = created_at
 
     def __repr__(self):
-        return f"<MonitoringGroup('{self.id}', '{self.name}', '{self.seed}')>"
+        return f"<MonitoringGroup('{self.id}', '{self.name}', '{self.seed}', '{self.created_at}')>"
 
 
 class Unit(BaseModel):
