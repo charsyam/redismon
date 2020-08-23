@@ -1,4 +1,6 @@
 import redis
+import rediscluster
+from redismon.redis_info import RedisInfo
 import sys
 
 
@@ -58,7 +60,7 @@ class Topology:
         sinfo = self.parse_slaves_info(info)
 
         addr = "{host}:{port}".format(host=host, port=port)
-        host_info = {"type": "slave", "host": host, "port": port, "parent": parent}
+        host_info = {"role": "slave", "host": host, "port": port, "parent": parent}
 
         results.append(host_info)
         for k in sinfo.keys():
@@ -72,7 +74,7 @@ class Topology:
         sinfo = self.parse_slaves_info(info)
 
         addr = "{host}:{port}".format(host=host, port=port)
-        host_info = {"type": "master", "host": host, "port": port}
+        host_info = {"role": "master", "host": host, "port": port}
 
         results = []
         results.append(host_info)
@@ -83,6 +85,49 @@ class Topology:
         return results
 
 
+class ClusterTopology:
+    def __init__(self, addr):
+        host, port = self.get_host_and_port(addr)
+        self.results = self.parse_cluster_topology(host, port)
+
+    def get_topology(self):
+        return self.results
+
+    def get_host_and_port(self, addr):
+        parts = addr.split(":")
+        return parts[0], int(parts[1])
+
+    def parse_cluster_topology(self, host, port):
+        result = []
+        cluster_nodes = [{'host': host, 'port': port}]
+        cluster = rediscluster.RedisCluster(startup_nodes=cluster_nodes, decode_responses=True)
+        nodes = cluster.cluster_nodes()
+        for node in nodes:
+            idx = 0
+            role = node['flags'][idx]
+            while role != "master" and role != "slave":
+                idx += 1
+                role = node['flags'][idx]
+            result.append({'role': role, 'host': node['host'], 'port': node['port']})
+
+        return result
+
+
+class TopologyManager:
+    def __init__(self, addr):
+        ri = RedisInfo(addr)
+        if ri.is_cluster():
+            topology = ClusterTopology(addr)
+        else:
+            topology = Topology(addr)
+
+        self.topology = topology
+
+    def get_topology(self):
+        return self.topology.get_topology()
+
+
 if __name__ == "__main__":
-    t = Topology(sys.argv[1])
+    addr = sys.argv[1]
+    t = TopologyManager(addr)
     print(t.get_topology())

@@ -1,4 +1,4 @@
 {
-    "name": "test_group_1",
-    "seed": "127.0.0.1:6379"
+    "name": "test_cluster_1",
+    "seed": "192.168.0.100:7379"
 }

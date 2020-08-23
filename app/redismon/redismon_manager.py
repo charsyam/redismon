@@ -1,5 +1,6 @@
 from redismon.model import MonitoringGroup, Unit, Metric
-from redismon.topology import Topology
+from redismon.topology import TopologyManager
+from redismon.redis_info import RedisInfo
 from sqlalchemy.sql import text
 from datetime import datetime
 
@@ -10,19 +11,21 @@ class RedisMonManager:
 
     def create_monitoring_group(self, name, seed):
         now = datetime.utcnow()
-        group = MonitoringGroup(name, seed, now)
         
+        info = RedisInfo(seed)
+
+        is_cluster = info.is_cluster()
+        group = MonitoringGroup(name, seed, is_cluster, now)
+
         self.db.session.add(group)
-        self.db.session.commit()
+        self.commit()
 
-        topology = Topology(seed)
-        for unit in topology.get_topology():
-            addr = "{host}:{port}".format(host=unit["host"], port=unit["port"])
-            unit = Unit(addr, group.id, now)
-            self.db.session.add(unit)
+        topology = TopologyManager(seed)
+        for host in topology.get_topology():
+            addr = "{host}:{port}".format(host=host["host"], port=host["port"])
+            self.create_unit(group.id, addr, host["role"], now)
 
-        self.db.session.commit()
-        
+        self.commit()
         return group
 
     def list_monitoring_groups(self):
@@ -42,6 +45,27 @@ class RedisMonManager:
 
         return Metric.query.filter(Metric.id.in_(result)).all()
 
+    def create_metric(self, unit_id, value, now, commit=True):
+        metric = Metric(unit_id, value, now)
+        self.db.session.add(metric)
+        if commit:
+            self.db.session.commit()
+
+        return metric
+
+    def create_unit(self, group_id, addr, role, now, commit=True):
+        unit = Unit(addr, group_id, role, now)
+        self.db.session.add(unit)
+        if commit:
+            self.db.seesion.commit()
+
+        return unit
+
+    def list_units(self):
+        return Unit.query.all()
+
+    def commit(self):
+        self.db.session.commit()
 
 
 if __name__ == '__main__':
