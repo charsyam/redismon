@@ -1,34 +1,27 @@
-from redismon.model import Unit, Metric
 from redismon.base import db
+from redismon.redismon_manager import RedisMonManager
+from redismon.redis_info import RedisInfo
 from datetime import datetime
 import json
-import redis
 
 
 class Agent:
-    def __init__(self, db, units):
-        self.db = db
-        self.units = units
+    def __init__(self, db):
+        self.manager = RedisMonManager(db)
+        self.units = self.manager.list_units()
         self.results = []
 
     def info_all(self):
         now = datetime.utcnow()
         for unit in self.units:
-            parts = unit.addr.split(":")
-            rconn = redis.StrictRedis(parts[0], int(parts[1]))
-            info = self.info_all_each(rconn)
+            ri = RedisInfo(unit.addr)
+            info = ri.info("all")
             
-            metric = Metric(unit.id, json.dumps(info), now)
-            self.db.session.add(metric)
+            self.manager.create_metric(unit.id, json.dumps(info), now)
 
-        self.db.session.commit()
-            
+        self.manager.commit()
 
-    def info_all_each(self, rconn):
-        info = rconn.info("all")
-        return info
 
 if __name__ == '__main__':
-    units = Unit.query.all()
-    agent = Agent(db, units)
+    agent = Agent(db)
     agent.info_all()

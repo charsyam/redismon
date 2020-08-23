@@ -99,5 +99,5 @@ class AnalyzeRedis:
 if __name__ == "__main__":
     from redismon.base import db
     m = RedisMonManager(db)
-    ar = AnalyzeRedis(m, "127.0.0.1:6379", datetime(2020, 8, 14, 10), datetime(2020, 8, 14, 18))
+    ar = AnalyzeRedis(m, "192.168.0.100:7379", datetime(2020, 8, 23, 10), datetime(2020, 8, 23, 18))
     ar.analyze()

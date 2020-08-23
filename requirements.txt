@@ -1,5 +1,6 @@
 flask
 redis
+redis-py-cluster
 pymysql
 nose
 flake8
