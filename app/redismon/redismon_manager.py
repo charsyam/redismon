@@ -1,4 +1,4 @@
-from redismon.model import MonitoringGroup, Unit, Metric
+from redismon.model import MonitoringGroup, Unit, Metric, Event
 from redismon.topology import TopologyManager
 from redismon.redis_info import RedisInfo
 from sqlalchemy.sql import text
@@ -23,7 +23,7 @@ class RedisMonManager:
         topology = TopologyManager(seed)
         for host in topology.get_topology():
             addr = "{host}:{port}".format(host=host["host"], port=host["port"])
-            self.create_unit(group.id, addr, host["role"], now)
+            self.create_unit(group.id, addr, host["role"], True, 0, now)
 
         self.commit()
         return group
@@ -38,10 +38,10 @@ class RedisMonManager:
         return Unit.query.filter(Unit.addr == addr).one()
 
     def get_metrics_by_time_range(self, unit_id, time_from, time_to):
-        query = text("SELECT min(id) as min_id, max(id) as max_id FROM metric WHERE created_at between :tfrom and :tto")
+        query = text("SELECT min(id) as min_id, max(id) as max_id FROM metric WHERE unit_id=:unit_id and created_at between :tfrom and :tto")
         result = self.db.session.query("min_id", "max_id")\
                                 .from_statement(query)\
-                                .params(tfrom=time_from, tto=time_to).one()
+                                .params(unit_id=unit_id, tfrom=time_from, tto=time_to).one()
 
         return Metric.query.filter(Metric.id.in_(result)).all()
 
@@ -53,11 +53,19 @@ class RedisMonManager:
 
         return metric
 
-    def create_unit(self, group_id, addr, role, now, commit=True):
-        unit = Unit(addr, group_id, role, now)
+    def create_event(self, unit_id, last_metric_created_at,  value, now, commit=True):
+        event = Event(unit_id, last_metric_created_at, value, now)
+        self.db.session.add(event)
+        if commit:
+            self.db.session.commit()
+
+        return event
+
+    def create_unit(self, group_id, addr, role, is_active, failure_count, now, commit=True):
+        unit = Unit(addr, group_id, role, is_active, failure_count, now)
         self.db.session.add(unit)
         if commit:
-            self.db.seesion.commit()
+            self.db.session.commit()
 
         return unit
 
