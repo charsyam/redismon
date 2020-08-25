@@ -149,21 +149,27 @@ class Unit(BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     addr = db.Column(db.String(256))
     group_id = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime)
     role = db.Column(db.String(16))
+    created_at = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean)
+    failure_count = db.Column(db.Integer)
 
     _default_fields = [
         "addr",
         "group_id",
+        "role",
+        "is_active",
+        "failure_count",
         "created_at",
-        "role"
     ]
 
-    def __init__(self, addr, group_id, role, created_at):
+    def __init__(self, addr, group_id, role, is_active, failure_count, created_at):
         self.addr = addr
         self.group_id= group_id
-        self.created_at = created_at
         self.role = role
+        self.is_active = is_active
+        self.failure_count = failure_count
+        self.created_at = created_at
 
     def __repr__(self):
         return f"<Unit('{self.id}', '{self.addr}', '{self.group_id}', '{self.role}', '{self.created_at}')>"
@@ -191,3 +197,27 @@ class Metric(BaseModel):
     def __repr__(self):
         return f"<Metric('{self.id}', '{self.unit_id}', '{self.value}', '{self.created_at}')>"
 
+class Event(BaseModel):
+    __tablename__ = "event"
+    __table_args__ = {'mysql_collate': 'utf8_general_ci'}
+    id = db.Column(db.Integer, primary_key=True)
+    unit_id = db.Column(db.Integer)
+    last_metric_created_at = db.Column(db.DateTime)
+    value = db.Column(db.Text)
+    created_at = db.Column(db.DateTime)
+
+    _default_fields = [
+        "unit_id",
+        "value",
+        "last_metric_created_at",
+        "created_at"
+    ]
+
+    def __init__(self, unit_id, last_metric_created_at, value, created_at):
+        self.unit_id = unit_id
+        self.value = value
+        self.last_metric_created_at = last_metric_created_at
+        self.created_at = created_at
+
+    def __repr__(self):
+        return f"<Event('{self.id}', '{self.unit_id}', '{self.value}', '{self.created_at}')>"
