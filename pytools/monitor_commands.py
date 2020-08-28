@@ -39,16 +39,16 @@ class Monitor():
                 self.run = False
 
     def parse(self, response):
-        value = response.decode('utf-8')
+        value = response.decode('utf-8').replace("\"", "")
         parts = value.split()
         if len(parts) > 4:
             db = parts[1][1:]
             host = parts[2][:-1]
-            cmd = parts[3]
+            cmd = parts[3].lower()
             key = parts[4]
 
-            self.key_counter[key] += 1
-            print(key)
+            if cmd not in ["info"]:
+                self.key_counter[key] += 1
 
         return response
         
@@ -67,4 +67,11 @@ if  __name__ == '__main__':
 
         print(c)
 
-    print(monitor.key_counter)
+    monitor.reset()
+    top100 = monitor.key_counter.most_common(100)
+    conn = redis.StrictRedis(host, port)
+    for key, count in top100:
+        data = conn.dump(key)
+        size = len(data)
+        print(key, count, size)
+        
