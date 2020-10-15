@@ -37,6 +37,9 @@ class RedisMonManager:
     def get_unit_by_addr(self, addr):
         return Unit.query.filter(Unit.addr == addr).one()
 
+    def get_all_metrics_by_time_range(self, unit_id, time_from, time_to):
+        return Metric.query.filter(Metric.created_at.between(time_from, time_to)).all()
+
     def get_metrics_by_time_range(self, unit_id, time_from, time_to):
         query = text("SELECT min(id) as min_id, max(id) as max_id FROM metric WHERE unit_id=:unit_id and created_at between :tfrom and :tto")
         result = self.db.session.query("min_id", "max_id")\

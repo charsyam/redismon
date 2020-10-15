@@ -7,3 +7,4 @@ flake8
 flask-migrate
 flask_sqlalchemy
 pylint
+scipy
