@@ -1,0 +1,167 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>RedisMon Dashboard</title>
+
+    <script src="https://www.chartjs.org/dist/2.9.4/Chart.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+</head>
+
+<body class="materialdesign">
+    <script>
+window.chartColors = {
+  red: 'rgb(255, 99, 132)',
+  orange: 'rgb(255, 159, 64)',
+  yellow: 'rgb(255, 205, 86)',
+  green: 'rgb(75, 192, 192)',
+  blue: 'rgb(54, 162, 235)',
+  purple: 'rgb(153, 102, 255)',
+  grey: 'rgb(201, 203, 207)'
+};
+
+        var seed = 0;
+        var config = {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                {
+                    label: 'Redis Instance Ops',
+                    backgroundColor: window.chartColors.yellow,
+                    borderColor: window.chartColors.yellow,
+                    data: [
+                    ],
+                    fill: false,
+                    yAxisID: 'y-axis-1'
+                },
+                {
+                    label: 'Redis Memory RSS',
+                    backgroundColor: window.chartColors.red,
+                    borderColor: window.chartColors.red,
+                    data: [
+                    ],
+                    fill: false,
+                    yAxisID: 'y-axis-2',
+                    gridLines: {
+						drawOnChartArea: false, // only want the grid lines for one axis to show up
+					},
+                }
+                ]
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: true,
+                    text: 'RedisMon Monitor'
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Date'
+                        }
+                    }],
+                    yAxes: [
+                    {
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Ops'
+                        },
+                        position: 'left',
+						id: 'y-axis-1'
+                    },
+                    {
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'RSS'
+                        },
+                        position: 'right',
+						id: 'y-axis-2'
+                    }
+                    ]
+                }
+            }
+        };
+
+        window.onload = function() {
+            var ctx = document.getElementById('ops').getContext('2d');
+            window.myLine = new Chart(ctx, config);
+            setInterval(updateChart, 5000);
+        };
+
+        function addNewRow(newTr, data) {
+            Td = newTr.insertCell(0);
+            Td.innerHTML=data.cmd;
+            Td = newTr.insertCell(1);
+            Td.innerHTML=data.type;
+            Td = newTr.insertCell(2);
+            Td.innerHTML=data.value;
+            Td = newTr.insertCell(3);
+            Td.innerHTML=data.description;
+        }
+
+        function deleteAllRowAndAddNewData(data) {
+            var tableHeaderRowCount = 1;
+            var table = document.getElementById('analyze');
+            var rowCount = table.rows.length;
+            for (var i = tableHeaderRowCount; i < rowCount; i++) {
+                table.deleteRow(tableHeaderRowCount);
+            }
+            
+            for (var i = 0; i < data.length; i++) {
+                newTr = table.insertRow(i+tableHeaderRowCount);
+                addNewRow(newTr, data[i])
+            }
+        }
+
+        function updateChart() {
+            var oReq = new XMLHttpRequest();
+            oReq.onload = function() {
+                console.log(oReq.responseText);
+                var result = JSON.parse(oReq.responseText);
+                config.data.labels = result.data.labels;
+                config.data.datasets[0].data = result.data.commands;
+                config.data.datasets[1].data = result.data.rss;
+                
+                deleteAllRowAndAddNewData(result.data.explains)
+
+                window.myLine.update();
+            }
+            oReq.open('GET', "http://192.168.0.103:5000/api/v1/info");
+            oReq.send();
+
+        }
+    </script>
+    <div class="flot-chart flot-chart-dashtwo">
+         <canvas id="ops"></canvas>
+    </div>
+    <div class="flot-chart flot-chart-dashtwo">
+<table class="table" id="analyze">
+  <caption>Analyze Redis Performance</caption>
+  <thead>
+    <tr>
+      <th scope="col">Command</th>
+      <th scope="col">Type</th>
+      <th scope="col">Value</th>
+      <th scope="col">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+    </div>
+</body>
+</html>
