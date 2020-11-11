@@ -3,6 +3,7 @@ import json
 
 PTIME = "ptime"
 CALLS = "calls"
+CMDSTAT_KEYS = "cmdstat_keys"
 
 def explain_slow_cmd(cmd, calls, ptime, call_limit, ptime_limit):
     if ptime >= ptime_limit:
@@ -12,18 +13,18 @@ def explain_slow_cmd(cmd, calls, ptime, call_limit, ptime_limit):
 
 def explain_ON_cmd(cmd, calls, ptime, call_limit, ptime_limit):
     if ptime >= ptime_limit:
-        return {'cmd': cmd, 'value': ptime, 'type': CALLS,
+        return {'cmd': cmd, 'value': ptime, 'type': PTIME,
                 'description': "You may get all data from large collections"}
 
 
 def explain_keys_cmd(cmd, calls, ptime, call_limit, ptime_limit):
-    if calls > call_limit:
-        return {'cmd': cmd, 'value': calls, 'type': CALLS,
+    if calls >= call_limit:
+        return {'cmd': cmd, 'value': ptime, 'type': PTIME,
                 'description': "Don't use keys command"}
 
 def explain_client_cmd(cmd, calls, ptime, call_limit, ptime_limit):
     if ptime > ptime_limit:
-        return {'cmd': cmd, 'value': ptime, 'type': CALLS,
+        return {'cmd': cmd, 'value': ptime, 'type': PTIME,
                 'description': " You have too many connections."}
 
 def explain_cluster_cmd(cmd, calls, ptime, call_limit, ptime_limit):
@@ -33,10 +34,11 @@ def explain_cluster_cmd(cmd, calls, ptime, call_limit, ptime_limit):
 
 
 EXPLAIN_CMDS_MAP = {
-    "cmdstat_get":      (explain_slow_cmd, 0, 10.0),
+    "cmdstat_get":      (explain_slow_cmd, 0, 20.0),
+    "cmdstat_del":      (explain_slow_cmd, 0, 20.0),
     "cmdstat_hget":      (explain_slow_cmd, 0, 10.0),
+    CMDSTAT_KEYS:      (explain_keys_cmd, 1, 0),
     "cmdstat_hmget":      (explain_slow_cmd, 0, 10.0),
-    "cmdstat_keys":     (explain_keys_cmd, 1, 0.0),
     "cmdstat_client":   (explain_client_cmd, 0, 100.0),
     "cmdstat_hgetall":  (explain_ON_cmd, 0, 50.0),
     "cmdstat_hvals":  (explain_ON_cmd, 0, 50.0),
@@ -94,6 +96,7 @@ class RedisExplainer:
             cmds.append(self.get_commands(value))
 
         results = {}
+        first_appeared_map = {}
         for i in range(len(cmds) - 1):
             current_cmds = cmds[i]
             next_cmds = cmds[i+1]
@@ -103,9 +106,20 @@ class RedisExplainer:
                 k = cmd[0]
                 v = cmd[1]
 
+                if k not in EXPLAIN_CMDS_MAP:
+                    continue
+
                 if k in cmdMap:
                     v1 = cmdMap[k]
-                    results[k] = (v["calls"] - v1["calls"], v["usec_per_call"])
+                    if EXPLAIN_CMDS_MAP[k][1] > 0:
+                        if k not in first_appeared_map:
+                            first_appeared_map[k] = v["calls"]
+                            
+                        old = first_appeared_map[k] 
+                        calls = v["calls"] - old
+                    else:
+                        calls = v["calls"] - v1["calls"]
+                    results[k] = (calls, v["usec_per_call"])
                 else:
                     results[k] = (v["calls"], v["user_per_call"])
 

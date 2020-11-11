@@ -16,9 +16,3 @@ class RedisManager:
 
     def info(self, param="all"):
         return self.rconn.info(param)
-
-    def add(self, now, value):
-        self.rconn.zadd(self.key, {value: now})
-
-    def get(self, minscore, maxscore):
-        return [json.loads(x) for x in self.rconn.zrangebyscore(self.key, minscore, maxscore)]
