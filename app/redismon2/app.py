@@ -4,53 +4,58 @@ from flask import Flask, jsonify, render_template
 from flask import request
 from flask_cors import CORS, cross_origin
 
-import redis
 import time
 import json
 
 import atexit
 import datetime
+from optparse import OptionParser
 
-from apscheduler.schedulers.background import BackgroundScheduler
 from redis_manager import RedisManager
 from redis_explainer import RedisExplainer
+from store import Store
+from poller import Poller
 
 
-SEED = 1604976618
-STD = 3600
+POLLING_INTERVAL = 5
+PERIOD = 3600
+
+store_mgr = Store(PERIOD/POLLING_INTERVAL)
+
+parser = OptionParser()
+parser.add_option("-a", "--addr", dest="addr", default="127.0.0.1",
+                  help="hostaddr")
+(options, args) = parser.parse_args()
+print(options)
+target_mgr = RedisManager(addr=options.addr)
+
+
+
+app = Flask(__name__)
+cors = CORS(app)
 
 
 def get_current_timestamp():
-    return int(datetime.datetime.utcnow().timestamp()) - SEED
+    return int(datetime.datetime.utcnow().timestamp())
 
-
-target_mgr = RedisManager()
-store_mgr = RedisManager()
-
-cron = BackgroundScheduler(daemon=True)
 
 def parse_info(info: dict):
     return info
+
 
 def collect_redis_info(mgr):
     info = mgr.info()
     return parse_info(info)
 
+
 def sensor():
-    print("Scheduler is alive!")
     value = collect_redis_info(target_mgr)
-    now = get_current_timestamp()
-    value["time"] = now + SEED
-    store_mgr.add(now, json.dumps(value))
+    value["time"] = get_current_timestamp()
+    store_mgr.append(value)
 
 
-sched = BackgroundScheduler(daemon=True)
-sched.add_job(sensor,'interval',minutes=1)
-sched.start()
-
-
-app = Flask(__name__)
-cors = CORS(app)
+poller = Poller.instance()
+poller.add(sensor, POLLING_INTERVAL)
 
 
 def make_histories(values):
@@ -62,7 +67,7 @@ def make_histories(values):
     rss = []
     for i in range(1, l):
         p = values[i]['total_commands_processed']
-        label = datetime.datetime.fromtimestamp(values[i]['time']).strftime("%Y-%m-%d_%H:%M:%S")
+        label = datetime.datetime.fromtimestamp(values[i]['time']).strftime("%Y-%m-%d %H:%M:%S")
         rs = values[i]['used_memory_rss']/1024/1024/1024
         v = p - c
         c = p
@@ -85,7 +90,7 @@ def index():
 @app.route('/api/v1/info', methods=['GET'])
 def analysis():
     now = get_current_timestamp()
-    values = store_mgr.get(now-STD, now+STD)
+    values = store_mgr.get()
     
     resp = Resp()
     if values == None or len(values) == 0:
@@ -104,6 +109,7 @@ def analysis():
 @app.route('/api/v1/hello', methods=['GET'])
 def hello():
     return redis_mgr.addr
+
 
 if __name__ == '__main__':
     app.run('0.0.0.0')
