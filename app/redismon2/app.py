@@ -37,7 +37,6 @@ queue = mp.Queue()
 config = None
 store_config = None
 if options.config and options.config is not None:
-    print(options.config)
     config = Config(options.config)
     store_config = config.get("store")
 

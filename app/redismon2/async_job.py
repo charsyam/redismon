@@ -18,7 +18,6 @@ class AsyncJob:
         except:
             v = None
 
-        print("get: ", v)
         return v
 
     def join(self):
