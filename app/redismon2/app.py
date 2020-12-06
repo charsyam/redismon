@@ -7,32 +7,50 @@ from flask_cors import CORS, cross_origin
 import time
 import json
 
+import os
+
 import atexit
 import datetime
 from optparse import OptionParser
+from config import Config
 
 from redis_manager import RedisManager
 from redis_explainer import RedisExplainer
-from store import Store
+from store import get_store_manager
 from poller import Poller
+from async_job import AsyncJob
+import multiprocessing as mp
 
 
 POLLING_INTERVAL = 5
 PERIOD = 3600
 
-store_mgr = Store(PERIOD/POLLING_INTERVAL)
-
 parser = OptionParser()
 parser.add_option("-a", "--addr", dest="addr", default="127.0.0.1",
                   help="hostaddr")
+parser.add_option("-c", "--config", dest="config", help="configfile")
 (options, args) = parser.parse_args()
-print(options)
-target_mgr = RedisManager(addr=options.addr)
 
+target_mgr = RedisManager(addr=options.addr)
+queue = mp.Queue()
+
+config = None
+store_config = None
+if options.config and options.config is not None:
+    print(options.config)
+    config = Config(options.config)
+    store_config = config.get("store")
+
+
+store_mgr = get_store_manager(store_config, PERIOD/POLLING_INTERVAL)
 
 
 app = Flask(__name__)
 cors = CORS(app)
+
+
+async_job_executed = False
+async_job = None
 
 
 def get_current_timestamp():
@@ -51,7 +69,7 @@ def collect_redis_info(mgr):
 def sensor():
     value = collect_redis_info(target_mgr)
     value["time"] = get_current_timestamp()
-    store_mgr.append(value)
+    store_mgr.append(json.dumps(value))
 
 
 poller = Poller.instance()
@@ -78,6 +96,13 @@ def make_histories(values):
     return {'commands': tc, 'labels': labels, 'rss': rss}
 
 
+def check_size(queue, args):
+    (limit) = args
+    redis_mgr = RedisManager(addr=options.addr)
+    all = redis_mgr.check_size(limit)
+    queue.put(all)
+
+    
 def Resp(code=0, message="ok"):
     return {'code': code, 'message': message}
 
@@ -87,10 +112,46 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/api/v1/item_size_result', methods=['GET'])
+def item_size_result():
+    global async_job_executed
+    global async_job
+
+    if not async_job_executed:
+        return Resp(-100, "No Check Size Job")
+
+    resp = Resp()
+    v = async_job.get()
+    if v is not None:
+        resp["data"] = v 
+        async_job.join()
+        async_job = None
+        async_job_executed = False
+        return resp
+    else:
+        return Resp(200, "In Progress")
+
+
+@app.route('/api/v1/item_size/<limit>', methods=['GET'])
+def item_size(limit=1024768):
+    limit = int(limit)
+    global async_job
+    global async_job_executed
+    resp = Resp()
+    if async_job_executed:
+        return Resp(-100, "Already Check Size Progress")
+    else:
+        async_job_executed = True
+        async_job = AsyncJob(check_size, queue, args=(limit)) 
+        async_job.start()
+
+    return resp
+        
+
 @app.route('/api/v1/info', methods=['GET'])
 def analysis():
     now = get_current_timestamp()
-    values = store_mgr.get()
+    values = [json.loads(x) for x in store_mgr.get()]
     
     resp = Resp()
     if values == None or len(values) == 0:
@@ -112,4 +173,8 @@ def hello():
 
 
 if __name__ == '__main__':
-    app.run('0.0.0.0')
+    if not config:
+        app.run('0.0.0.0')
+    else:
+        app_config = config.get("app")
+        app.run(host=app_config.get("host"), port=int(app_config.get("port")))
