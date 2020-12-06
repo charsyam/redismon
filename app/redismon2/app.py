@@ -25,13 +25,12 @@ import multiprocessing as mp
 POLLING_INTERVAL = 5
 PERIOD = 3600
 
-
 parser = OptionParser()
 parser.add_option("-a", "--addr", dest="addr", default="127.0.0.1",
                   help="hostaddr")
 parser.add_option("-c", "--config", dest="config", help="configfile")
 (options, args) = parser.parse_args()
-print(options)
+
 target_mgr = RedisManager(addr=options.addr)
 queue = mp.Queue()
 
@@ -103,7 +102,7 @@ def check_size(queue, args):
     all = redis_mgr.check_size(limit)
     queue.put(all)
 
-
+    
 def Resp(code=0, message="ok"):
     return {'code': code, 'message': message}
 
