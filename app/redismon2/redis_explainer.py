@@ -5,49 +5,47 @@ PTIME = "ptime"
 CALLS = "calls"
 CMDSTAT_KEYS = "cmdstat_keys"
 
+
+
+def base_check(cmd, calls, ptime, call_limit, ptime_limit, check_type, description):
+    if ptime >= ptime_limit and calls > call_limit:
+        return {'cmd': cmd, 'value': ptime, 'type': check_type, 'description': description}
+
 def explain_slow_cmd(cmd, calls, ptime, call_limit, ptime_limit):
-    if ptime >= ptime_limit:
-        return {'cmd': cmd, 'value': ptime, 'type': PTIME,
-                'description': "some keys have large value"}
+    return base_check(cmd, calls, ptime, call_limit, ptime_limit, PTIME, "some keys have large value")
 
 
 def explain_ON_cmd(cmd, calls, ptime, call_limit, ptime_limit):
-    if ptime >= ptime_limit:
-        return {'cmd': cmd, 'value': ptime, 'type': PTIME,
-                'description': "You may get all data from large collections"}
+    return base_check(cmd, calls, ptime, call_limit, ptime_limit, PTIME, "You may get all data from large collections")
 
 
 def explain_keys_cmd(cmd, calls, ptime, call_limit, ptime_limit):
-    if calls >= call_limit:
-        return {'cmd': cmd, 'value': ptime, 'type': PTIME,
-                'description': "Don't use keys command"}
+    return base_check(cmd, calls, ptime, call_limit, ptime_limit, PTIME, "Don't use keys command")
+
 
 def explain_client_cmd(cmd, calls, ptime, call_limit, ptime_limit):
-    if ptime > ptime_limit:
-        return {'cmd': cmd, 'value': ptime, 'type': PTIME,
-                'description': " You have too many connections."}
+    return base_check(cmd, calls, ptime, call_limit, ptime_limit, PTIME, "You have too many connections")
+
 
 def explain_cluster_cmd(cmd, calls, ptime, call_limit, ptime_limit):
-    if ptime > ptime_limit:
-        return {'cmd': cmd, 'value': ptime, 'type': PTIME,
-                'description': "cluster command is basically slow command."}
+    return base_check(cmd, calls, ptime, call_limit, ptime_limit, PTIME, "cluster command is basically slow command")
 
 
 EXPLAIN_CMDS_MAP = {
-    "cmdstat_get":      (explain_slow_cmd, 0, 20.0),
-    "cmdstat_del":      (explain_slow_cmd, 0, 20.0),
-    "cmdstat_hget":      (explain_slow_cmd, 0, 10.0),
+    "cmdstat_get":      (explain_slow_cmd, 1, 20.0),
+    "cmdstat_del":      (explain_slow_cmd, 1, 20.0),
+    "cmdstat_hget":      (explain_slow_cmd, 1, 10.0),
     CMDSTAT_KEYS:      (explain_keys_cmd, 1, 0),
-    "cmdstat_hmget":      (explain_slow_cmd, 0, 10.0),
-    "cmdstat_client":   (explain_client_cmd, 0, 100.0),
-    "cmdstat_hgetall":  (explain_ON_cmd, 0, 50.0),
-    "cmdstat_hvals":  (explain_ON_cmd, 0, 50.0),
-    "cmdstat_smembers":  (explain_ON_cmd, 0, 50.0),
-    "cmdstat_zrange":  (explain_ON_cmd, 0, 50.0),
-    "cmdstat_zrangebyscore":  (explain_ON_cmd, 0, 50.0),
-    "cmdstat_zrevrange":  (explain_ON_cmd, 0, 50.0),
-    "cmdstat_zrevrangebyscore":  (explain_ON_cmd, 0, 50.0),
-    "cmdstat_cluster":  (explain_cluster_cmd, 0, 50.0),
+    "cmdstat_hmget":      (explain_slow_cmd, 1, 10.0),
+    "cmdstat_client":   (explain_client_cmd, 1, 100.0),
+    "cmdstat_hgetall":  (explain_ON_cmd, 1, 50.0),
+    "cmdstat_hvals":  (explain_ON_cmd, 1, 50.0),
+    "cmdstat_smembers":  (explain_ON_cmd, 1, 50.0),
+    "cmdstat_zrange":  (explain_ON_cmd, 1, 50.0),
+    "cmdstat_zrangebyscore":  (explain_ON_cmd, 1, 50.0),
+    "cmdstat_zrevrange":  (explain_ON_cmd, 1, 50.0),
+    "cmdstat_zrevrangebyscore":  (explain_ON_cmd, 1, 50.0),
+    "cmdstat_cluster":  (explain_cluster_cmd, 1, 50.0),
 }
 
 
@@ -121,6 +119,6 @@ class RedisExplainer:
                         calls = v["calls"] - v1["calls"]
                     results[k] = (calls, v["usec_per_call"])
                 else:
-                    results[k] = (v["calls"], v["user_per_call"])
+                    results[k] = (v["calls"], v["usec_per_call"])
 
         return results
