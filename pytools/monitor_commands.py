@@ -48,7 +48,6 @@ class Monitor():
             key = parts[4]
 
             self.key_counter[key] += 1
-            print(key)
 
         return response
         
@@ -56,6 +55,12 @@ class Monitor():
 if  __name__ == '__main__':
     host = sys.argv[1]
     port = int(sys.argv[2])
+    N = 100
+    try:
+        N = int(sys.argv[3])
+    except:
+        N = 100
+
     pool = redis.ConnectionPool(host=host, port=port, db=0)
     monitor = Monitor(pool)
     commands = monitor.monitor()
@@ -65,6 +70,6 @@ if  __name__ == '__main__':
             print("")
             break
 
-        print(c)
-
-    print(monitor.key_counter)
+    print("Redis Key Monitor Most Common 100")
+    for k, v in monitor.key_counter.most_common(N):
+        print(k, v)
