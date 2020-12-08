@@ -1,0 +1,12 @@
+flask
+redis
+redis-py-cluster
+pymysql
+nose
+flake8
+flask-migrate
+flask_sqlalchemy
+pylint
+scipy
+flask-cors
+APScheduler
