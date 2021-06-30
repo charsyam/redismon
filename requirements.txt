@@ -6,5 +6,7 @@ nose
 flake8
 flask-migrate
 flask_sqlalchemy
+flask_cors==3.0.10
 pylint
 scipy
+apscheduler==3.7.0
