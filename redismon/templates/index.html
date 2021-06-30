@@ -104,7 +104,7 @@ window.chartColors = {
 
         function addNewRow(newTr, data) {
             Td = newTr.insertCell(0);
-            Td.innerHTML=data.cmd;
+            Td.innerHTML=data.name;
             Td = newTr.insertCell(1);
             Td.innerHTML=data.type;
             Td = newTr.insertCell(2);
@@ -142,9 +142,9 @@ window.chartColors = {
                 document.getElementById('mem_rss').innerHTML = result.data.memory.rss;
                 document.getElementById('mem_peak').innerHTML = result.data.memory.peak;
                 document.getElementById('mem_used').innerHTML = result.data.memory.used;
-                
+                console.write(result.data.memory.rss);
             }
-            oReq.open('GET', "http://127.0.0.1:5000/api/v1/info");
+            oReq.open('GET', "http://192.168.0.100:5000/api/v1/info");
             oReq.send();
 
         }
