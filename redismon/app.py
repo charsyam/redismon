@@ -22,7 +22,7 @@ from async_job import AsyncJob
 import multiprocessing as mp
 
 
-POLLING_INTERVAL = 5
+POLLING_INTERVAL = 10 
 PERIOD = 3600
 
 parser = OptionParser()
@@ -160,7 +160,15 @@ def analysis():
     explainer = RedisExplainer(values)
     results['explains'] = explainer.explain()
     results['memory'] = {'rss': last['used_memory_rss_human'], 'used': last['used_memory_human'],
-                         'peak': last['used_memory_peak_human']}
+                         'peak': last['used_memory_peak_human'], 'ratio': 0}
+
+    if "total_system_memory_human" in last:
+        results['memory']['total'] = last["total_system_memory_human"]
+        results['memory']['ratio'] = str(int(float(last["used_memory"]) / float(last["total_system_memory"]) * 100)) + "%"
+
+    if "maxmemory" in last:
+        if last["maxmemory"] > 0:
+            results['memory']['ratio'] = str(int(float(last["used_memory"]) / float(last["maxmemory"]) * 100)) + "%"
 
     resp['data'] = results
     return resp
