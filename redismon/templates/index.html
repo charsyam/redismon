@@ -142,6 +142,8 @@ window.chartColors = {
                 document.getElementById('mem_rss').innerHTML = result.data.memory.rss;
                 document.getElementById('mem_peak').innerHTML = result.data.memory.peak;
                 document.getElementById('mem_used').innerHTML = result.data.memory.used;
+                document.getElementById('total_memory').innerHTML = result.data.memory.total;
+                document.getElementById('ratio').innerHTML = result.data.memory.ratio;
                 console.write(result.data.memory.rss);
             }
             oReq.open('GET', "http://192.168.0.100:5000/api/v1/info");
@@ -152,11 +154,10 @@ window.chartColors = {
 <div class="row">
                     <div class="col-md-3 col-sm-12 col-xs-12">
                         <div class="panel panel-primary text-center no-boder bg-color-green">
-                            <div class="panel-left pull-left green">
-                                <i class="fa fa-bar-chart-o fa-5x"></i>
-                                
-                            </div>
-                            <div class="panel-right pull-right">
+                            <div class="panel-left pull-left blue">
+                                <i class="fa fa-5x"></i>
+							</div>
+                            <div class="panel-center pull-center">
 								<h3 id='mem_rss'>0</h3>
                                <strong>Current RSS</strong>
                             </div>
@@ -164,11 +165,11 @@ window.chartColors = {
                     </div>
                     <div class="col-md-3 col-sm-12 col-xs-12">
                         <div class="panel panel-primary text-center no-boder bg-color-blue">
-                              <div class="panel-left pull-left blue">
-                                <i class="fa fa-shopping-cart fa-5x"></i>
-								</div>
+                            <div class="panel-left pull-left blue">
+                                <i class="fa fa-5x"></i>
+							</div>
                                 
-                            <div class="panel-right pull-right">
+                            <div class="panel-center pull-center">
 							<h3 id='mem_peak'>0</h3>
                                <strong>Peak Memory</strong>
 
@@ -178,12 +179,38 @@ window.chartColors = {
                     <div class="col-md-3 col-sm-12 col-xs-12">
                         <div class="panel panel-primary text-center no-boder bg-color-red">
                             <div class="panel-left pull-left red">
-                                <i class="fa fa fa-comments fa-5x"></i>
+                                <i class="fa fa fa-5x"></i>
                                
                             </div>
-                            <div class="panel-right pull-right">
+                            <div class="panel-center pull-center">
 							 <h3 id='mem_used'>0</h3>
                                <strong>Used Memory</strong>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-12 col-xs-12">
+                        <div class="panel panel-primary text-center no-boder bg-color-red">
+                            <div class="panel-left pull-left red">
+                                <i class="fa fa fa-5x"></i>
+                               
+                            </div>
+                            <div class="panel-center pull-center">
+							 <h3 id='total_memory'>0</h3>
+                               <strong>Total Memory</strong>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-12 col-xs-12">
+                        <div class="panel panel-primary text-center no-boder bg-color-red">
+                            <div class="panel-left pull-left red">
+                                <i class="fa fa fa-5x"></i>
+                               
+                            </div>
+                            <div class="panel-center pull-center">
+							 <h3 id='ratio'>0</h3>
+                               <strong>ratio</strong>
 
                             </div>
                         </div>
