@@ -99,7 +99,8 @@ window.chartColors = {
         window.onload = function() {
             var ctx = document.getElementById('ops').getContext('2d');
             window.myLine = new Chart(ctx, config);
-            setInterval(updateChart, 5000);
+            setInterval(updateChart, {{ interval }} );
+            updateChart();
         };
 
         function addNewRow(newTr, data) {
@@ -130,7 +131,6 @@ window.chartColors = {
         function updateChart() {
             var oReq = new XMLHttpRequest();
             oReq.onload = function() {
-                console.log(oReq.responseText);
                 var result = JSON.parse(oReq.responseText);
                 config.data.labels = result.data.labels;
                 config.data.datasets[0].data = result.data.commands;
@@ -144,7 +144,6 @@ window.chartColors = {
                 document.getElementById('mem_used').innerHTML = result.data.memory.used;
                 document.getElementById('total_memory').innerHTML = result.data.memory.total;
                 document.getElementById('ratio').innerHTML = result.data.memory.ratio;
-                console.write(result.data.memory.rss);
             }
             oReq.open('GET', "http://{{ SERVER_ADDR }}/api/v1/info");
             oReq.send();

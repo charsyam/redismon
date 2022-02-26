@@ -22,7 +22,7 @@ from async_job import AsyncJob
 import multiprocessing as mp
 
 g_server_addr = None
-POLLING_INTERVAL = 10 
+POLLING_INTERVAL = 1
 PERIOD = 3600
 
 parser = OptionParser()
@@ -41,7 +41,7 @@ if options.config and options.config is not None:
     store_config = config.get("store")
 
 
-store_mgr = get_store_manager(store_config, PERIOD/POLLING_INTERVAL)
+store_mgr = None
 
 
 app = Flask(__name__)
@@ -75,7 +75,6 @@ def sensor():
 
 
 poller = Poller.instance()
-poller.add(sensor, POLLING_INTERVAL)
 
 
 def make_histories(values):
@@ -111,8 +110,8 @@ def Resp(code=0, message="ok"):
 
 @app.route('/')
 def index():
-    global g_server_addr
-    return render_template('index.html', SERVER_ADDR = g_server_addr)
+    global g_server_addr, POLLING_INTERVAL
+    return render_template('index.html', SERVER_ADDR = g_server_addr, interval = POLLING_INTERVAL*1000)
 
 
 @app.route('/api/v1/item_size_result', methods=['GET'])
@@ -191,12 +190,18 @@ def get_local_ip():
 
 
 if __name__ == '__main__':
+    addr = "0.0.0.0"
+    port = 5000
+
     if not config:
-        elasticache = False
         g_server_addr = get_local_ip() + ":5000"
-        app.run('0.0.0.0')
     else:
         app_config = config.get("app")
-        elasticache = app_config.get("elasticache")
+        POLLING_INTERVAL = int(app_config.get("interval"))
         g_server_addr = app_config.get("host") + ":" + app_config.get("port")
-        app.run(host=app_config.get("host"), port=int(app_config.get("port")))
+        addr = app_config.get("host")
+        port = int(app_config.get("port"))
+
+    store_mgr = get_store_manager(store_config, PERIOD/POLLING_INTERVAL)
+    poller.add(sensor, POLLING_INTERVAL)
+    app.run(host=addr, port=port)
