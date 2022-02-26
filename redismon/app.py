@@ -198,7 +198,7 @@ if __name__ == '__main__':
     else:
         app_config = config.get("app")
         POLLING_INTERVAL = int(app_config.get("interval"))
-        g_server_addr = app_config.get("host") + ":" + app_config.get("port")
+        g_server_addr = get_local_ip() + ":" + app_config.get("port")
         addr = app_config.get("host")
         port = int(app_config.get("port"))
 
