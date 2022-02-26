@@ -146,7 +146,7 @@ window.chartColors = {
                 document.getElementById('ratio').innerHTML = result.data.memory.ratio;
                 console.write(result.data.memory.rss);
             }
-            oReq.open('GET', "http://192.168.0.100:5000/api/v1/info");
+            oReq.open('GET', "http://{{ SERVER_ADDR }}/api/v1/info");
             oReq.send();
 
         }

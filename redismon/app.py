@@ -21,7 +21,7 @@ from poller import Poller
 from async_job import AsyncJob
 import multiprocessing as mp
 
-
+g_server_addr = None
 POLLING_INTERVAL = 10 
 PERIOD = 3600
 
@@ -60,6 +60,9 @@ def parse_info(info: dict):
     return info
 
 
+def get_redis_save_info(mgr):
+    return mgr.get_config("save")['save']
+    
 def collect_redis_info(mgr):
     info = mgr.info()
     return parse_info(info)
@@ -108,7 +111,8 @@ def Resp(code=0, message="ok"):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    global g_server_addr
+    return render_template('index.html', SERVER_ADDR = g_server_addr)
 
 
 @app.route('/api/v1/item_size_result', methods=['GET'])
@@ -179,9 +183,20 @@ def hello():
     return redis_mgr.addr
 
 
+def get_local_ip():
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    return s.getsockname()[0]
+
+
 if __name__ == '__main__':
     if not config:
+        elasticache = False
+        g_server_addr = get_local_ip() + ":5000"
         app.run('0.0.0.0')
     else:
         app_config = config.get("app")
+        elasticache = app_config.get("elasticache")
+        g_server_addr = app_config.get("host") + ":" + app_config.get("port")
         app.run(host=app_config.get("host"), port=int(app_config.get("port")))

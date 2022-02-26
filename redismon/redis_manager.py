@@ -47,6 +47,9 @@ class RedisManager:
     def info(self, param="all"):
         return self.rconn.info(param)
 
+    def get_config(self, key):
+        return self.rconn.config_get(key)
+
     def check_size(self, limit = 1024768):
         all = get_all_items_size(self.rconn, limit)
         return all
