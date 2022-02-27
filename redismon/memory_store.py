@@ -8,7 +8,7 @@ class MemoryStore:
 
         length = len(self.store)
         if length > self.limit:
-            self.store = self.store[l-self.limit:]
+            self.store = self.store[length-self.limit:]
 
     def get(self):
         return self.store
