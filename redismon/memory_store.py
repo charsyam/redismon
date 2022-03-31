@@ -1,14 +1,20 @@
 class MemoryStore:
     def __init__(self, limit = 120):
-        self.store = []
+        self.store = {}
         self.limit = limit
 
-    def append(self, value):
-        self.store.append(value)
+    def append(self, host, value):
+        if host not in self.store:
+            self.store[host] = []
 
-        length = len(self.store)
+        self.store[host].append(value)
+
+        length = len(self.store[host])
         if length > self.limit:
-            self.store = self.store[length-self.limit:]
+            self.store = self.store[host][length-self.limit:]
 
-    def get(self):
-        return self.store
+    def keys(self):
+        return self.store.keys()
+
+    def get(self, host):
+        return self.store[host]

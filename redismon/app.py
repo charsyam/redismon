@@ -69,9 +69,10 @@ def collect_redis_info(mgr):
 
 
 def sensor():
+    host = target_mgr.get_host()
     value = collect_redis_info(target_mgr)
     value["time"] = get_current_timestamp()
-    store_mgr.append(json.dumps(value))
+    store_mgr.append(host, json.dumps(value))
 
 
 poller = Poller.instance()
@@ -150,14 +151,11 @@ def item_size(limit=1024768):
     return resp
         
 
-@app.route('/api/v1/info', methods=['GET'])
-def analysis():
-    now = get_current_timestamp()
-    values = [json.loads(x) for x in store_mgr.get()]
-    
-    resp = Resp()
+def produce_graph_data(host):
+    values = [json.loads(x) for x in store_mgr.get(host)]
     if values == None or len(values) == 0:
-        return resp
+        return None
+    
     last = values[-1]
     results = make_histories(values)
     explainer = RedisExplainer(values)
@@ -173,7 +171,22 @@ def analysis():
         if last["maxmemory"] > 0:
             results['memory']['ratio'] = str(int(float(last["used_memory"]) / float(last["maxmemory"]) * 100)) + "%"
 
-    resp['data'] = results
+    return results
+
+
+@app.route('/api/v1/info', methods=['GET'])
+def analysis():
+    now = get_current_timestamp()
+    
+    hosts = store_mgr.keys()
+    r = {}
+    for host in hosts:
+        result = produce_graph_data(host)
+        if result:
+            r[host] = result
+
+    resp = Resp()
+    resp['data'] = r
     return resp
 
 

@@ -43,6 +43,10 @@ class RedisManager:
 
         self.rconn = redis.StrictRedis(host=host, port=port)
         self.key = f"rm:{host}:{port}"
+        self.host = f"{host}:{port}"
+
+    def get_host(self):
+        return self.host
 
     def info(self, param="all"):
         return self.rconn.info(param)
