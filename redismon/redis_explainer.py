@@ -4,6 +4,8 @@ import json
 PTIME = "ptime"
 CALLS = "calls"
 CMDSTAT_KEYS = "cmdstat_keys"
+INFO = 0
+STAT = 1
 
 
 def base_check(name, calls, ptime, call_limit, ptime_limit, check_type, description):
@@ -40,8 +42,15 @@ def explain_clients_stat(stat, value, value_limit):
     return base_stat_check(stat, value, value_limit, "connected_clients value is changed a lot")
 
 
+def explain_redis_version(stat, value, value_limit):
+    if value[0] < '6':
+        description = "Recommand Redis 6.x for failover, Redis 6.x support PSYNC2 better"
+        return {'name': stat, 'type': 'info', 'value': value, 'data_type': 'value', 'description': description}
+
+
 EXPLAIN_STATS_MAP = {
-    "connected_clients":    (explain_clients_stat, 100)
+    "connected_clients":    (explain_clients_stat, STAT, 100),
+    "redis_version":     (explain_redis_version, INFO, 0)
 }
 
 EXPLAIN_CMDS_MAP = {
@@ -82,7 +91,8 @@ class RedisExplainer:
             if k in EXPLAIN_STATS_MAP:
                 m = EXPLAIN_STATS_MAP[k]
                 call = m[0]
-                value_limit = m[1]
+                t = m[1]
+                value_limit = m[2]
 
                 ret = call(k, v, value_limit)
                 if ret is not None:
@@ -148,8 +158,13 @@ class RedisExplainer:
                 if k not in EXPLAIN_STATS_MAP:
                     continue
 
-                v1 = statMap[k]
-                results[k] = abs(v - v1)
+                m = EXPLAIN_STATS_MAP[k]
+
+                if m[1] == STAT:
+                    v1 = statMap[k]
+                    results[k] = abs(v - v1)
+                elif m[1] == INFO:
+                    results[k] = v
 
         return results
 
